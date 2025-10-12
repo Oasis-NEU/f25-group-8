@@ -1,0 +1,1 @@
+// Artist submission interface

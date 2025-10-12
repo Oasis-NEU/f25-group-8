@@ -1,3 +1,5 @@
+// Main landing screen with map
+
 import Image from "next/image";
 
 export default function Home() {

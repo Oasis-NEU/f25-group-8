@@ -1,6 +1,9 @@
+// shared UI structure that wraps around multiple pages
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>
