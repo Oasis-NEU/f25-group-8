@@ -4,7 +4,7 @@
 "use client"
 
 import React from 'react';
-import { X, Home, User, PlusCircle, Settings, Trophy, Map } from 'lucide-react';
+import { X, Home, User, PlusCircle, Settings, Trophy, Map, Menu} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type HamburgerMenuProps = {
@@ -47,15 +47,12 @@ const HamburgerMenu = ({ isOpen, onClose }: HamburgerMenuProps) => {
       >
         {/* Menu Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            DoodleEarth
-          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition"
             aria-label="Close menu"
           >
-            <X className="w-6 h-6 text-gray-700" />
+            <Menu className="w-6 h-6 text-gray-700" />
           </button>
         </div>
 

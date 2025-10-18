@@ -28,7 +28,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
 
         {/* Center: Logo/Title */}
         <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-blue-600 font-bold text-xl">
             DoodleEarth
           </h1>
         </div>
