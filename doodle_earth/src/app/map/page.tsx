@@ -2,9 +2,9 @@
 "use client"
 
 import React, { useState } from 'react';
-import MapView from '@/components/map/MapView';
-import TopBar from '@/components/navigation/TopBar';
-import HamburgerMenu from '@/components/navigation/HamburgerMenu';
+import MapView from '@/components/MapView';
+import TopBar from '@/components/TopBar';
+import HamburgerMenu from '@/components/HamburgerMenu';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 export default function HomePage() {
