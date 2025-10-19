@@ -40,7 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-src/components/commission
+src/components/commission/*
 src/components/common
 src/components/map
 src/components/navigation
