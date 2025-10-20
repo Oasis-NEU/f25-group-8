@@ -323,20 +323,12 @@ const SettingsPage = () => {
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-4 text-center">Drawing Studio</h1>
-        <Image className="
-          max-wd-md
-          mx-auto
-          "
-          src="/placeholder_image.png"
-          width={500}
-          height={500}
-          alt="Contest Image"
-        />
+
         <div className="flex gap-4 justify-center">
           {/* Left Sidebar - Brush Menu */}
           <div className="w-48 bg-white rounded-lg shadow-lg p-3">
             <h2 className="text-lg font-bold mb-3 text-center">🖌️ Brushes</h2>
-            <div className="space-y-1 max-h-[600px] overflow-y-auto">
+            <div className="space-y-1 max-h-[1000px] overflow-y-auto">
               {brushes.map((brush) => {
                 const unlocked = isBrushUnlocked(brush.id);
                 const isActive = selectedBrush === brush.id;
@@ -376,37 +368,57 @@ const SettingsPage = () => {
           {/* Center - Canvas and Controls */}
           <div className="flex flex-col items-center">
             {/* Top Controls */}
-            <div className="bg-white rounded-lg shadow-lg p-3 mb-4 flex gap-2">
-              <button 
-                onClick={undo}
-                disabled={historyStep <= 0}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
-              >
-                ↶ Undo
-              </button>
-              <button 
-                onClick={redo}
-                disabled={historyStep >= history.length - 1}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
-              >
-                ↷ Redo
-              </button>
-              <button 
-                onClick={clearCanvas}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium"
-              >
-                🗑️ Clear
-              </button>
-              <button 
-                onClick={saveDrawing}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
-              >
-                💾 Save
-              </button>
-            </div>
+            <Image className="
+            max-wd-md
+            mx-auto
+            "
+            src="/placeholder_image.png"
+            width={500}
+            height={500}
+            alt="Contest Image"
+          />
+
+            <h1 className ="
+            text-xl
+            font-bold
+            my-4
+            text-center
+            ">
+              Prompt Here
+            </h1>
 
             {/* Canvas */}
-            <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="bg-white rounded-lg shadow-lg p-4 relative">
+
+                <div className="absolute top-6 right-6 z-10 flex gap-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-md">
+                <button 
+                  onClick={undo}
+                  disabled={historyStep <= 0}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-bold text-xl font-large"
+                >
+                  ↶
+                </button>
+                <button 
+                  onClick={redo}
+                  disabled={historyStep >= history.length - 1}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-xl font-medium"
+                >
+                  ↷
+                </button>
+                <button 
+                  onClick={clearCanvas}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium"
+                >
+                  🗑️
+                </button>
+                <button 
+                  onClick={saveDrawing}
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
+                >
+                  💾
+                </button>
+              </div>
+
               <canvas
                 ref={canvasRef}
                 width={800}
@@ -417,8 +429,11 @@ const SettingsPage = () => {
                 onMouseLeave={stopDrawing}
                 className="border-2 border-gray-300 rounded cursor-crosshair"
               />
+              
             </div>
+ 
           </div>
+
 
           {/* Right Sidebar - Color Picker */}
           <div className="w-56 bg-white rounded-lg shadow-lg p-3">
@@ -442,7 +457,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Color Grid */}
-            <div className="grid grid-cols-4 gap-2 max-h-[520px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-4 gap-2 max-h-[1000px] overflow-y-auto pr-1">
               {colorPalette.map((color) => {
                 const unlocked = isColorUnlocked(color.hex);
                 const isActive = selectedColor === color.hex;
