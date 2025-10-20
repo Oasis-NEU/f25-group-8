@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import Image from 'next/image'
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import MapLocationPicker from '@/components/map/MapLocationPicker';
+import MapLocationPicker from '@/components/MapLocationPicker';
 import MapView from '@/components/MapView';
 
 // Sample prompts that would come from database later

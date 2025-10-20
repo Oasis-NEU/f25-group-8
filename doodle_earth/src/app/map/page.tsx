@@ -5,22 +5,31 @@ import React, { useState } from 'react';
 import MapView from '@/components/MapView';
 import TopBar from '@/components/TopBar';
 import HamburgerMenu from '@/components/HamburgerMenu';
+import CommissionCard from '@/components/CommissionCard';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 export default function HomePage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [selectedCommission, setSelectedCommission] = useState(null);
 
     return (
         <div className="relative h-screen w-screen overflow-hidden">
-        {/* Top Navigation Bar */}
-        <TopBar onMenuClick={() => setIsMenuOpen(true)} />
+          {/* Top Navigation Bar */}
+          <TopBar onMenuClick={() => setIsMenuOpen(true)} />
 
-        {/* Hamburger Menu */}
-        <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+          {/* Hamburger Menu */}
+          <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+          
+          {/* Map View */}
+          <MapView />
 
-        {/* Map View */}
-        <MapView />
-
+          {/* Card - positioned absolutely on top of map */}
+          <div className="absolute bottom-0 right-0 z-10 
+              bg-white rounded-t-lg shadow-lg 
+              max-w-md my-auto mb-4">
+              <CommissionCard />
+          </div>
+          
         </div>
     );
 }

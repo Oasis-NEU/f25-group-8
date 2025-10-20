@@ -31,7 +31,8 @@ const CommissionPin = ({ commission, onClose }: CommissionPinProps) => {
   const router = useRouter();
 
   const handleViewDetails = () => {
-    router.push(`/commission/${commission.id}`);
+    // router.push(`/commission/${commission.id}`);
+    router.push(`/drawing');
   };
 
   return (
