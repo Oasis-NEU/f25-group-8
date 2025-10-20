@@ -63,6 +63,7 @@ const PostPage = () => {
         src="/placeholder_image.png"
         width={500}
         height={500}
+        alt="Post Image"
       />
       <button className="
         my-2

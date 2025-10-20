@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from 'react';
+import Image from 'next/image'
 
 const SettingsPage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,8 +40,8 @@ const SettingsPage = () => {
     { id: 16, name: 'Ink Pen', type: 'ink', size: 2, icon: '🖊️', locked: true },
     { id: 17, name: 'Ink Brush', type: 'ink', size: 5, icon: '🖊️', locked: true },
     
-    { id: 18, name: 'Charcoal Stick', type: 'charcoal', size: 8, icon: '⬛', locked: true },
-    { id: 19, name: 'Charcoal Block', type: 'charcoal', size: 16, icon: '⬛', locked: true },
+    { id: 18, name: 'Charcoal Stick', type: 'charcoal', size: 8, icon: '⬛', locked: false },
+    { id: 19, name: 'Charcoal Block', type: 'charcoal', size: 16, icon: '⬛', locked: false },
   ];
 
   // Color palette
@@ -322,7 +323,15 @@ const SettingsPage = () => {
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-4 text-center">Drawing Studio</h1>
-        
+        <Image className="
+          max-wd-md
+          mx-auto
+          "
+          src="/placeholder_image.png"
+          width={500}
+          height={500}
+          alt="Contest Image"
+        />
         <div className="flex gap-4 justify-center">
           {/* Left Sidebar - Brush Menu */}
           <div className="w-48 bg-white rounded-lg shadow-lg p-3">
