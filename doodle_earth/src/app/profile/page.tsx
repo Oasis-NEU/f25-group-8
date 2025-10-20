@@ -207,6 +207,11 @@ const ProfilePage = () => {
               label="Overview"
             />
             <TabButton
+              active={activeTab === 'comissions'}
+              onClick={() => setActiveTab('comissions')}
+              label="Comissions"
+            />
+            <TabButton
               active={activeTab === 'wins'}
               onClick={() => setActiveTab('wins')}
               label="Winning Submissions"
