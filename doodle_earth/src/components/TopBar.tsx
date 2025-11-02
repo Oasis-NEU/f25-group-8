@@ -35,20 +35,6 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
-          {/* Currency Display */}
-          <div className="hidden sm:flex items-center gap-1 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full font-semibold text-sm">
-            <DollarSign className="w-4 h-4" />
-            <span>2,450</span>
-          </div>
-
-          {/* Create Commission Button */}
-          <button
-            onClick={() => router.push('/post')}
-            className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
-            aria-label="Create commission"
-          >
-            <PlusCircle className="w-5 h-5" />
-          </button>
 
           {/* Profile Button */}
           <button

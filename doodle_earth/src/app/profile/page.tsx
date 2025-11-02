@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 import { User, Trophy, Palette, MapPin, TrendingUp, Award, Clock, DollarSign } from 'lucide-react';
-
+import TopBar from '@/components/TopBar';
+import HamburgerMenu from '@/components/HamburgerMenu';
 
 // Add this type definition at the top of your file
 type StatCardProps = {
@@ -113,9 +114,16 @@ const mockUserData = {
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const user = mockUserData;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      {/* Top Navigation Bar */}
+      <TopBar onMenuClick={() => setIsMenuOpen(true)} />
+
+      {/* Hamburger Menu */}
+      <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">

@@ -1,7 +1,12 @@
 "use client"
-
+import TopBar from '@/components/TopBar';
+import HamburgerMenu from '@/components/HamburgerMenu';
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image'
+
+type TopBarProps = {
+  onMenuClick: () => void;
+};
 
 const SettingsPage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -319,8 +324,16 @@ const SettingsPage = () => {
     return unlockedColors.includes(colorHex);
   };
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   return (
     <div className="min-h-screen bg-gray-100 p-4">
+      {/* Top Navigation Bar */}
+      <TopBar onMenuClick={() => setIsMenuOpen(true)} />
+
+      {/* Hamburger Menu */}
+      <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-4 text-center">Drawing Studio</h1>
 

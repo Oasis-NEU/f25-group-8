@@ -7,6 +7,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapLocationPicker from '@/components/MapLocationPicker';
 import MapView from '@/components/MapView';
+import TopBar from '@/components/TopBar';
+import HamburgerMenu from '@/components/HamburgerMenu';
 
 // Sample prompts that would come from database later
 const SAMPLE_PROMPTS = [
@@ -44,8 +46,16 @@ const PostPage = () => {
     setshowLocationDropdown(false); // Close dropdown after selection
   }
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   return (
     <div>
+      {/* Top Navigation Bar */}
+      <TopBar onMenuClick={() => setIsMenuOpen(true)} />
+
+      {/* Hamburger Menu */}
+      <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      
       <div className="p-16 bg-blue-100">
         <h1 className="
           my-2 

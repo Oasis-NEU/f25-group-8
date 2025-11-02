@@ -22,7 +22,6 @@ const HamburgerMenu = ({ isOpen, onClose }: HamburgerMenuProps) => {
 
   const menuItems = [
     { icon: Home, label: 'Home', path: '/' },
-    { icon: Map, label: 'Explore Map', path: '/map' },
     { icon: User, label: 'Profile', path: '/profile' },
     { icon: PlusCircle, label: 'Create Commission', path: '/post' },
     // { icon: Trophy, label: 'Leaderboard', path: '/leaderboard' },
