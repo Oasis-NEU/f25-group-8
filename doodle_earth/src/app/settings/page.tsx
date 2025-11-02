@@ -1,35 +1,37 @@
-// Settings menu page
-"use client"
+'use client';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-const SettingsPage = () => {
-  const [instruments, setInstruments] = useState([]);
+export default function SettingsPage() {
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    getInstruments();
-  }, []);
+    async function getUsers() {
+      console.log('Fetching users...');
+      
+      const { data, error } = await supabase
+        .from('Users')
+        .select('Name');
+      
+      console.log('Data:', data);
+      console.log('Error:', error);
+      
+      setUsers(data || []);
+    }
 
-  async function getInstruments() {
-    const { data } = await supabase.from("instruments").select();
-    setInstruments(data);
-  }
+    getUsers();
+  }, []);
 
   return (
     <div>
-      <div>Placeholder Settings Page</div>
+      <h1>Users:</h1>
+      <p>Found {users.length} users</p>
       <ul>
-        {instruments.map((instrument) => (
-          <li key={instrument.name}>{instrument.name}</li>
+        {users.map((user, index) => (
+          <li key={index}>{user.Name}</li>
         ))}
       </ul>
     </div>
-  )}
-  
-export default SettingsPage;
+  );
+}
