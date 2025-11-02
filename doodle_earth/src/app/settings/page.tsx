@@ -4,26 +4,26 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import TopBar from '@/components/TopBar';
 import HamburgerMenu from '@/components/HamburgerMenu';
+import { getUserProfile } from '@/lib/supabase/client';
 
 export default function SettingsPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    async function getUsers() {
-      console.log('Fetching users...');
+    async function loadUser() {
+      console.log('About to call getUserProfile...');
+      const data = await getUserProfile("JPork");
+      console.log('getUserProfile returned:', data);
+      console.log('Type of data:', typeof data);
+      console.log('Is data an array?', Array.isArray(data));
       
-      const { data, error } = await supabase
-        .from('Users')
-        .select('Name');
-      
-      console.log('Data:', data);
-      console.log('Error:', error);
-      
-      setUsers(data || []);
+      if (data) {
+        setUsers(data);
+      }
     }
 
-    getUsers();
+    loadUser();
   }, []);
 
   return (
@@ -38,6 +38,7 @@ export default function SettingsPage() {
       <div className="pt-20 px-6">
         <h1>Users:</h1>
         <p>Found {users.length} users</p>
+        <p>Users data: {JSON.stringify(users)}</p>
         <ul>
           {users.map((user, index) => (
             <li key={index}>{user.Name}</li>
