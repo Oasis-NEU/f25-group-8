@@ -15,14 +15,14 @@ export default function CommissionCard() {
             ">
                 User123's Commission
             </h1>
-            <Image className="
-                max-wd-md
-                mx-auto
-                "
-                src="/placeholder_image.png"
-                width={500}
-                height={500}
-            />
+           <Image 
+            className="max-w-md mx-auto"
+            src="/placeholder_image.png"
+            width={500}
+            height={500}
+            alt="Commission artwork placeholder"
+                        />
+        
             <h1 className="
                 my-2
             ">

@@ -2,10 +2,11 @@
 // @ts-nocheck
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Trophy, Palette, MapPin, TrendingUp, Award, Clock, DollarSign } from 'lucide-react';
 import TopBar from '@/components/TopBar';
 import HamburgerMenu from '@/components/HamburgerMenu';
+import { supabase } from '@/lib/supabase/client';
 
 // Add this type definition at the top of your file
 type StatCardProps = {
@@ -40,6 +41,20 @@ type SubmissionRowProps = {
     location: string;
     status: 'pending' | 'won' | 'lost';
     submittedDate: string;
+  };
+};
+
+type CommissionRowProps = {
+  commission: {
+    id: string;
+    title: string;
+    location: string;
+    prompt: string;
+    category: string;
+    currency: number;
+    submissionCount?: number;
+    status?: string;
+    created_by?: string;
   };
 };
 
@@ -115,6 +130,40 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const user = mockUserData;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userCommissions, setUserCommissions] = useState([]);
+  const [loadingCommissions, setLoadingCommissions] = useState(false);
+
+  useEffect(() => {
+    fetchUserCommissions();
+  }, []);
+
+  const fetchUserCommissions = async () => {
+    try {
+      setLoadingCommissions(true);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (!authUser) {
+        console.log('No authenticated user');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('commissions')
+        .select('*')
+        .eq('created_by', authUser.id);
+
+      if (error) {
+        console.error('Error fetching commissions:', error);
+      } else {
+        setUserCommissions(data || []);
+        console.log('Fetched commissions:', data);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoadingCommissions(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
@@ -215,9 +264,9 @@ const ProfilePage = () => {
               label="Overview"
             />
             <TabButton
-              active={activeTab === 'comissions'}
-              onClick={() => setActiveTab('comissions')}
-              label="Comissions"
+              active={activeTab === 'commissions'}
+              onClick={() => setActiveTab('commissions')}
+              label="Commissions"
             />
             <TabButton
               active={activeTab === 'wins'}
@@ -239,6 +288,7 @@ const ProfilePage = () => {
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'overview' && <OverviewTab user={user} />}
+            {activeTab === 'commissions' && <CommissionsTab commissions={userCommissions} loading={loadingCommissions} />}
             {activeTab === 'wins' && <WinsTab wins={user.recentWins} />}
             {activeTab === 'submissions' && <SubmissionsTab submissions={user.recentSubmissions} />}
             {activeTab === 'achievements' && <AchievementsTab achievements={user.achievements} />}
@@ -297,6 +347,25 @@ const OverviewTab = ({ user }) => (
   </div>
 );
 
+// Tab: Commissions
+const CommissionsTab = ({ commissions, loading }) => (
+  <div className="space-y-4">
+    {loading ? (
+      <div className="text-center py-8 text-gray-500">
+        <p>Loading your commissions...</p>
+      </div>
+    ) : commissions.length === 0 ? (
+      <div className="text-center py-8 text-gray-500">
+        <p>You haven't created any commissions yet</p>
+      </div>
+    ) : (
+      commissions.map((commission) => (
+        <CommissionRow key={commission.id} commission={commission} />
+      ))
+    )}
+  </div>
+);
+
 // Tab: Wins
 const WinsTab = ({ wins }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -338,7 +407,7 @@ const AchievementsTab = ({ achievements }) => (
 );
 
 // Component: Win Card
-const WinCard = ({ win }) => (
+const WinCard = ({ win }: WinCardProps) => (
   <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition cursor-pointer">
     <div className="aspect-square bg-gradient-to-br from-purple-300 to-blue-300 flex items-center justify-center">
       {win.thumbnailUrl ? (
@@ -366,7 +435,7 @@ const WinCard = ({ win }) => (
 );
 
 // Component: Submission Row
-const SubmissionRow = ({ submission }) => (
+const SubmissionRow = ({ submission }: SubmissionRowProps) => (
   <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer">
     <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-300 to-blue-300 flex-shrink-0 flex items-center justify-center">
       {submission.thumbnailUrl ? (
@@ -397,6 +466,42 @@ const SubmissionRow = ({ submission }) => (
       >
         {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
       </span>
+    </div>
+  </div>
+);
+
+// Component: Commission Row
+const CommissionRow = ({ commission }: CommissionRowProps) => (
+  <div className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+    <div className="flex items-start justify-between">
+      <div className="flex-1">
+        <h4 className="font-bold text-gray-900 mb-1">{commission.title}</h4>
+        <p className="text-sm text-gray-600 mb-2">{commission.prompt}</p>
+        <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-1">
+            <MapPin className="w-4 h-4" />
+            {commission.location}
+          </div>
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+            {commission.category}
+          </span>
+        </div>
+      </div>
+      <div className="text-right flex-shrink-0 ml-4">
+        <p className="font-bold text-green-600 mb-1">${commission.currency}</p>
+        {commission.submissionCount && (
+          <p className="text-xs text-gray-500 mb-2">{commission.submissionCount} submissions</p>
+        )}
+        {commission.status && (
+          <span className={`text-xs px-2 py-1 rounded ${
+            commission.status === 'active' 
+              ? 'bg-green-100 text-green-700' 
+              : 'bg-gray-100 text-gray-700'
+          }`}>
+            {commission.status}
+          </span>
+        )}
+      </div>
     </div>
   </div>
 );
