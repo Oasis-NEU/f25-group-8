@@ -3,7 +3,7 @@
 // src/components/navigation/HamburgerMenu.tsx
 "use client"
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Home, User, PlusCircle, Settings, Trophy, Map, Menu} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,19 @@ type HamburgerMenuProps = {
 
 const HamburgerMenu = ({ isOpen, onClose }: HamburgerMenuProps) => {
   const router = useRouter();
+  const [username, setUsername] = useState('Guest');
+
+  useEffect(() => {
+    loadUserData();
+  }, [isOpen]); // Reload when menu opens
+
+  const loadUserData = () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      const userData = JSON.parse(currentUser);
+      setUsername(userData.Username || 'Guest');
+    }
+  };
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -62,8 +75,7 @@ const HamburgerMenu = ({ isOpen, onClose }: HamburgerMenuProps) => {
               <User className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">User123</h3>
-              <p className="text-sm text-gray-600">Level 12 • 2,450 credits</p>
+              <h3 className="font-bold text-gray-900">{username}</h3>
             </div>
           </div>
         </div>
