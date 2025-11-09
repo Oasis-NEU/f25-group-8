@@ -111,6 +111,7 @@ const PostPage = () => {
       }
 
       const userData = JSON.parse(currentUser);
+      console.log('User data:', userData); // Debug log
 
       // Calculate expiration time (e.g., 30 days from now)
       const expirationDate = new Date();
@@ -126,13 +127,13 @@ const PostPage = () => {
             prompt: selectedPrompt,
             time_posted: new Date().toISOString(),
             time_expired: expirationDate.toISOString(),
-            user_id: userData.user_id,
+            user_id: userData.user_id || null,
           }
         ]);
 
       if (error) {
         console.error('Error creating commission:', error);
-        alert('Failed to create commission. Please try again.');
+        alert('Failed to create commission: ' + error.message);
       } else {
         // Show success popup
         setShowSuccessPopup(true);
@@ -146,7 +147,7 @@ const PostPage = () => {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred. Please try again.');
+      alert('An error occurred: ' + error);
     } finally {
       setIsSubmitting(false);
     }
