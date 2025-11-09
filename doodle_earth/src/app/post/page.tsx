@@ -7,6 +7,15 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapLocationPicker from '@/components/MapLocationPicker';
 import MapView from '@/components/MapView';
+import TopBar from '@/components/TopBar';
+import HamburgerMenu from '@/components/HamburgerMenu';
+
+// Type definition for location data
+interface LocationData {
+  address: string;
+  lng: number;
+  lat: number;
+}
 
 // Sample prompts that would come from database later
 const SAMPLE_PROMPTS = [
@@ -19,24 +28,24 @@ const SAMPLE_PROMPTS = [
 
 const PostPage = () => {
   // State to track if dropdown is visible
-  const [showPromptDropdown, setshowPromptDropdown] = useState(false);
-  const [showLocationDropdown, setshowLocationDropdown] = useState(false);
+  const [showPromptDropdown, setshowPromptDropdown] = useState<boolean>(false);
+  const [showLocationDropdown, setshowLocationDropdown] = useState<boolean>(false);
 
   // State to track selected prompt
-  const [selectedPrompt, setSelectedPrompt] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedPrompt, setSelectedPrompt] = useState<string>("");
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
 
-  // ADD: Store the actual coordinates
-  const [savedLng, setSavedLng] = useState(-71.09); // Default: Boston
-  const [savedLat, setSavedLat] = useState(42.34);
+  // Store the actual coordinates
+  const [savedLng, setSavedLng] = useState<number>(-71.09); // Default: Boston
+  const [savedLat, setSavedLat] = useState<number>(42.34);
 
   // Function to handle when user clicks a prompt
-  function handlePromptSelect(prompt) {
+  function handlePromptSelect(prompt: string): void {
     setSelectedPrompt(prompt);
     setshowPromptDropdown(false); // Close dropdown after selection
   }
 
-  function handleLocationSelect(location) {
+  function handleLocationSelect(location: LocationData): void {
     setSelectedLocation(location.address);
     // SAVE the coordinates for next time
     setSavedLng(location.lng);
@@ -45,147 +54,103 @@ const PostPage = () => {
   }
 
   return (
-    <div>
-      <div className="p-16 bg-blue-100">
-        <h1 className="
-          my-2 
-          text-blue-600 
-          text-4xl 
-          font-bold 
-          text-center
-        ">
-          Create New Commission
-        </h1>
-      <Image className="
-        max-wd-md
-        mx-auto
-        "
-        src="/placeholder_image.png"
-        width={500}
-        height={500}
-        alt="Post Image"
-      />
-      <button className="
-        my-2
-        p-2 
-        bg-sky-500 
-        hover:bg-sky-700 
-        rounded-lg 
-        max-w-md
-        mx-auto
-        block
-      ">
-        Upload Photo
-      </button>
-      <div className="
-        text-center
-        ">
-        Location: {selectedLocation || "Choose a location"}
-      </div>
-      <button className="
-        my-2
-        p-2 
-        bg-sky-500 
-        hover:bg-sky-700 
-        rounded-lg 
-        max-w-md
-        mx-auto
-        block
-        "
-        onClick={() => setshowLocationDropdown(!showLocationDropdown)}
-      >
-        Choose Location
-      </button>
-
-
-      {/* Location selection menu - only shows when showLocationDropdown is true */}
-      {showLocationDropdown && (
-        <div className="
-          max-w-2xl
-          mx-auto
-          h-full
-          bg-white
-          border-2
-          border-gray-300
-          rounded-lg
-          shadow-lg
-          my-2
-          p-4
-        ">
-          <MapLocationPicker 
-            onLocationSelect={handleLocationSelect} 
-            defaultLng={savedLng}
-            defaultLat={savedLat}
-          />
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-blue-600 mb-2">
+            Create New Commission
+          </h1>
+          <p className="text-lg text-gray-600">Upload an image and customize your art request</p>
         </div>
-      )}
 
-
-      <div className="
-        text-center
-        ">
-        Prompt: {selectedPrompt || "Choose a prompt"}
-      </div>
-      <button className="
-        my-2
-        p-2 
-        bg-sky-500 
-        hover:bg-sky-700 
-        rounded-lg 
-        max-w-md
-        mx-auto
-        block
-        "
-      onClick={() => setshowPromptDropdown(!showPromptDropdown)}
-      >
-        Choose Prompt
-      </button>
-      
-      {/* Dropdown menu - only shows when showPromptDropdown is true */}
-      {showPromptDropdown && (
-        <div className="
-          max-w-md
-          mx-auto
-          bg-white
-          border-2
-          border-gray-300
-          rounded-lg
-          shadow-lg
-          my-2
-        ">
-          {SAMPLE_PROMPTS.map((prompt, index) => (
-            <div
-              key={index}
-              onClick={() => handlePromptSelect(prompt)}
-              className="
-                p-3
-                hover:bg-blue-100
-                cursor-pointer
-                border-b
-                border-gray-200
-                last:border-b-0
-              "
-            >
-              {prompt}
+        {/* Main Content Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Image Upload Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Image</h2>
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 mb-4 hover:border-blue-400 transition-colors">
+              <Image 
+                className="mx-auto rounded-lg max-w-full h-auto"
+                src="/placeholder_image.png"
+                width={500}
+                height={500}
+                alt="Post Image"
+              />
             </div>
-          ))}
-        </div>
-      )}
+            <button className="w-full py-3 px-6 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg">
+              Upload Photo
+            </button>
+          </div>
 
-      <button className="
-        my-2
-        p-2 
-        bg-sky-500 
-        hover:bg-sky-700 
-        rounded-lg 
-        max-w-md
-        mx-auto
-        block
-      ">
-        Create Commission
-      </button>
-      </div> 
+          {/* Location Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Location</h2>
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
+              <p className="text-gray-700 font-medium">
+                {selectedLocation || <span className="text-gray-500 italic">No location selected</span>}
+              </p>
+            </div>
+            <button 
+              className="w-full py-3 px-6 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+              onClick={() => setshowLocationDropdown(!showLocationDropdown)}
+            >
+              {showLocationDropdown ? 'Close Map' : 'Choose Location'}
+            </button>
+
+            {/* Location selection menu */}
+            {showLocationDropdown && (
+              <div className="bg-white border-2 border-gray-300 rounded-xl shadow-lg p-4 mt-4">
+                <MapLocationPicker 
+                  onLocationSelect={handleLocationSelect} 
+                  defaultLng={savedLng}
+                  defaultLat={savedLat}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Prompt Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Art Prompt</h2>
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
+              <p className="text-gray-700 font-medium">
+                {selectedPrompt || <span className="text-gray-500 italic">No prompt selected</span>}
+              </p>
+            </div>
+            <button 
+              className="w-full py-3 px-6 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+              onClick={() => setshowPromptDropdown(!showPromptDropdown)}
+            >
+              {showPromptDropdown ? 'Close Prompts' : 'Choose Prompt'}
+            </button>
+            
+            {/* Dropdown menu */}
+            {showPromptDropdown && (
+              <div className="bg-white border-2 border-gray-300 rounded-xl shadow-lg overflow-hidden mt-4">
+                {SAMPLE_PROMPTS.map((prompt, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handlePromptSelect(prompt)}
+                    className="p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-200 last:border-b-0 transition-colors font-medium text-gray-800"
+                  >
+                    {prompt}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div className="pt-4 mt-4 border-t border-gray-200">
+            <button className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              Create Commission
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  )}
+  )
+}
   
 export default PostPage;
