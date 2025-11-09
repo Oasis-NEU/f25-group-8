@@ -39,6 +39,10 @@ const PostPage = () => {
   const [savedLng, setSavedLng] = useState<number>(-71.09); // Default: Boston
   const [savedLat, setSavedLat] = useState<number>(42.34);
 
+  // State for uploaded image
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   // Function to handle when user clicks a prompt
   function handlePromptSelect(prompt: string): void {
     setSelectedPrompt(prompt);
@@ -51,6 +55,23 @@ const PostPage = () => {
     setSavedLng(location.lng);
     setSavedLat(location.lat);
     setshowLocationDropdown(false); // Close dropdown after selection
+  }
+
+  // Handle file upload
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>): void {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // Trigger file input click
+  function triggerFileInput(): void {
+    fileInputRef.current?.click();
   }
 
   return (
@@ -72,13 +93,23 @@ const PostPage = () => {
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 mb-4 hover:border-blue-400 transition-colors">
               <Image 
                 className="mx-auto rounded-lg max-w-full h-auto"
-                src="/placeholder_image.png"
+                src={uploadedImage || "/placeholder_image.png"}
                 width={500}
                 height={500}
                 alt="Post Image"
               />
             </div>
-            <button className="w-full py-3 px-6 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <button 
+              onClick={triggerFileInput}
+              className="w-full py-3 px-6 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+            >
               Upload Photo
             </button>
           </div>
