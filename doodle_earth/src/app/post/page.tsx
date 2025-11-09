@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image'
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapLocationPicker from '@/components/MapLocationPicker';
@@ -50,8 +50,6 @@ const PostPage = () => {
   // State for submission
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
-
-  const supabase = createClient();
 
   // Function to handle when user clicks a prompt
   function handlePromptSelect(prompt: string): void {
