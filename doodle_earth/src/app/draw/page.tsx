@@ -16,6 +16,7 @@ const DrawingPage = () => {
   const [unlockedBrushes, setUnlockedBrushes] = useState<number[]>([0, 1, 2, 3, 4, 5]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   
   // Brush definitions with fixed sizes
   const brushes = [
@@ -315,10 +316,9 @@ const DrawingPage = () => {
     }
 
     const userData = JSON.parse(currentUser);
-
-    // For now, use a default post_id (you should pass this from the commission)
-    // TODO: Get the actual post_id from the commission page
-    const postId = 3; // Replace with actual commission ID
+    
+    // Hardcoded post_id
+    const postId = 3;
 
     setIsSubmitting(true);
 
@@ -333,7 +333,7 @@ const DrawingPage = () => {
           {
             image_url: imageDataUrl,
             user_id: userData.user_id || null,
-            post_id: postId, // Link to a specific commission
+            post_id: postId,
             comp_winner: false,
           }
         ]);
@@ -342,9 +342,13 @@ const DrawingPage = () => {
         console.error('Error submitting drawing:', error);
         alert('Failed to submit drawing: ' + error.message);
       } else {
-        alert('Drawing submitted successfully!');
-        // Optional: redirect to submissions page
-        // window.location.href = '/commission';
+        // Show success popup
+        setShowSuccessPopup(true);
+        
+        // Redirect to home after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -431,22 +435,15 @@ const DrawingPage = () => {
           {/* Center - Canvas and Controls */}
           <div className="flex flex-col items-center">
             {/* Top Image */}
-            <Image className="
-            max-wd-md
-            mx-auto
-            "
-            src="/placeholder_image.png"
-            width={500}
-            height={500}
-            alt="Contest Image"
-          />
+            <Image 
+              className="max-wd-md mx-auto"
+              src="/placeholder_image.png"
+              width={500}
+              height={500}
+              alt="Contest Image"
+            />
 
-            <h1 className ="
-            text-xl
-            font-bold
-            my-4
-            text-center
-            ">
+            <h1 className="text-xl font-bold my-4 text-center">
               Prompt Here
             </h1>
 
@@ -573,6 +570,18 @@ const DrawingPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center animate-bounce">
+            <div className="text-6xl mb-4">✅</div>
+            <h2 className="text-2xl font-bold text-green-600 mb-2">Success!</h2>
+            <p className="text-gray-600">Drawing submitted successfully!</p>
+            <p className="text-sm text-gray-500 mt-2">Redirecting to map...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
