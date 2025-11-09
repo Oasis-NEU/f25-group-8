@@ -101,14 +101,16 @@ const PostPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get current user from localStorage
+      const currentUser = localStorage.getItem('currentUser');
       
-      if (!user) {
+      if (!currentUser) {
         alert('You must be logged in to create a commission');
         setIsSubmitting(false);
         return;
       }
+
+      const userData = JSON.parse(currentUser);
 
       // Calculate expiration time (e.g., 30 days from now)
       const expirationDate = new Date();
@@ -124,7 +126,7 @@ const PostPage = () => {
             prompt: selectedPrompt,
             time_posted: new Date().toISOString(),
             time_expired: expirationDate.toISOString(),
-            user_id: user.id,
+            user_id: userData.user_id,
           }
         ]);
 
