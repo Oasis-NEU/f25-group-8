@@ -132,10 +132,36 @@ const ProfilePage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userCommissions, setUserCommissions] = useState([]);
   const [loadingCommissions, setLoadingCommissions] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    fetchUserCommissions();
+    checkAuthentication();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserCommissions();
+    }
+  }, [isAuthenticated]);
+
+  const checkAuthentication = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // User is not logged in, redirect to login page
+        window.location.href = '/login';
+      } else {
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error('Error checking authentication:', error);
+      window.location.href = '/login';
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
 
   const fetchUserCommissions = async () => {
     try {
@@ -164,6 +190,23 @@ const ProfilePage = () => {
       setLoadingCommissions(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the page if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
