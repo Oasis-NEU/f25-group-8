@@ -47,20 +47,31 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
-      // Check if user exists in Users table
-      const { data: users, error } = await supabase
+      // Try to find user by username first
+      let { data: users, error } = await supabase
         .from('Users')
         .select('*')
-        .eq('Username', email) // Using email field to match username
-        .eq('Password', password)
-        .single();
+        .eq('Username', email)
+        .eq('Password', password);
 
-      if (error || !users) {
-        setErrorMessage('Invalid username or password');
+      // If not found by username, try by email in Name field
+      if (!users || users.length === 0) {
+        const { data: emailUsers, error: emailError } = await supabase
+          .from('Users')
+          .select('*')
+          .like('Name', `%${email}%`)
+          .eq('Password', password);
+        
+        users = emailUsers;
+        error = emailError;
+      }
+
+      if (error || !users || users.length === 0) {
+        setErrorMessage('Invalid username/email or password');
       } else {
         setSuccessMessage('Login successful!');
         // Store user session in localStorage
-        localStorage.setItem('currentUser', JSON.stringify(users));
+        localStorage.setItem('currentUser', JSON.stringify(users[0]));
         setTimeout(() => {
           window.location.href = '/';
         }, 1500);
@@ -96,12 +107,12 @@ export default function LoginPage() {
         return;
       }
 
-      // Insert new user into Users table
+      // Insert new user into Users table (storing email in Name field for now)
       const { error: profileError } = await supabase
         .from('Users')
         .insert([
           {
-            Name: name,
+            Name: `${name}|${email}`, // Store both name and email
             Username: username,
             Password: password,
             Points: 0,
@@ -114,7 +125,9 @@ export default function LoginPage() {
       } else {
         setSuccessMessage('Account created successfully!');
         setTimeout(() => {
-          window.location.href = '/login';
+          // Switch to login mode
+          setIsLogin(true);
+          setSuccessMessage('');
         }, 1500);
       }
     } catch (error) {
