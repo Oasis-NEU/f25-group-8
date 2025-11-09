@@ -2,13 +2,10 @@
 import TopBar from '@/components/TopBar';
 import HamburgerMenu from '@/components/HamburgerMenu';
 import React, { useRef, useState, useEffect } from 'react';
-import Image from 'next/image'
+import Image from 'next/image';
+import { supabase } from '@/lib/supabase/client';
 
-type TopBarProps = {
-  onMenuClick: () => void;
-};
-
-const SettingsPage = () => {
+const DrawingPage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedBrush, setSelectedBrush] = useState(0);
@@ -17,6 +14,9 @@ const SettingsPage = () => {
   const [historyStep, setHistoryStep] = useState(-1);
   const [unlockedColors, setUnlockedColors] = useState<string[]>(['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF']);
   const [unlockedBrushes, setUnlockedBrushes] = useState<number[]>([0, 1, 2, 3, 4, 5]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   
   // Brush definitions with fixed sizes
   const brushes = [
@@ -302,6 +302,62 @@ const SettingsPage = () => {
     link.click();
   };
 
+  // Submit drawing to Supabase
+  const submitDrawing = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Check if user is logged in
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+      alert('You must be logged in to submit a drawing');
+      window.location.href = '/login';
+      return;
+    }
+
+    const userData = JSON.parse(currentUser);
+    
+    // Hardcoded post_id
+    const postId = 3;
+
+    setIsSubmitting(true);
+
+    try {
+      // Convert canvas to base64 image
+      const imageDataUrl = canvas.toDataURL('image/png');
+
+      // Insert into Entry table
+      const { data, error } = await supabase
+        .from('Entry')
+        .insert([
+          {
+            image_url: imageDataUrl,
+            user_id: userData.user_id || null,
+            post_id: postId,
+            comp_winner: false,
+          }
+        ]);
+
+      if (error) {
+        console.error('Error submitting drawing:', error);
+        alert('Failed to submit drawing: ' + error.message);
+      } else {
+        // Show success popup
+        setShowSuccessPopup(true);
+        
+        // Redirect to home after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while submitting');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const unlockBrush = (brushId: number) => {
     if (!unlockedBrushes.includes(brushId)) {
       setUnlockedBrushes([...unlockedBrushes, brushId]);
@@ -323,8 +379,6 @@ const SettingsPage = () => {
   const isColorUnlocked = (colorHex: string) => {
     return unlockedColors.includes(colorHex);
   };
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -334,7 +388,7 @@ const SettingsPage = () => {
       {/* Hamburger Menu */}
       <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto pt-20">
         <h1 className="text-3xl font-bold mb-4 text-center">Drawing Studio</h1>
 
         <div className="flex gap-4 justify-center">
@@ -380,23 +434,16 @@ const SettingsPage = () => {
 
           {/* Center - Canvas and Controls */}
           <div className="flex flex-col items-center">
-            {/* Top Controls */}
-            <Image className="
-            max-wd-md
-            mx-auto
-            "
-            src="/placeholder_image.png"
-            width={500}
-            height={500}
-            alt="Contest Image"
-          />
+            {/* Top Image */}
+            <Image 
+              className="max-wd-md mx-auto"
+              src="/placeholder_image.png"
+              width={500}
+              height={500}
+              alt="Contest Image"
+            />
 
-            <h1 className ="
-            text-xl
-            font-bold
-            my-4
-            text-center
-            ">
+            <h1 className="text-xl font-bold my-4 text-center">
               Prompt Here
             </h1>
 
@@ -444,6 +491,15 @@ const SettingsPage = () => {
               />
               
             </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={submitDrawing}
+              disabled={isSubmitting}
+              className="mt-4 w-full max-w-2xl py-4 px-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isSubmitting ? '✨ Submitting...' : '🎨 Post Submission'}
+            </button>
  
           </div>
 
@@ -514,8 +570,20 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center animate-bounce">
+            <div className="text-6xl mb-4">✅</div>
+            <h2 className="text-2xl font-bold text-green-600 mb-2">Success!</h2>
+            <p className="text-gray-600">Drawing submitted successfully!</p>
+            <p className="text-sm text-gray-500 mt-2">Redirecting to map...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default SettingsPage;
+export default DrawingPage;
