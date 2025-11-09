@@ -29,8 +29,8 @@ export default function LoginPage() {
   }, []);
 
   async function checkAuth() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
       // User is already logged in, redirect to home
       window.location.href = '/';
     }
@@ -47,15 +47,20 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      // Check if user exists in Users table
+      const { data: users, error } = await supabase
+        .from('Users')
+        .select('*')
+        .eq('Username', email) // Using email field to match username
+        .eq('Password', password)
+        .single();
 
-      if (error) {
-        setErrorMessage(error.message);
+      if (error || !users) {
+        setErrorMessage('Invalid username or password');
       } else {
         setSuccessMessage('Login successful!');
+        // Store user session in localStorage
+        localStorage.setItem('currentUser', JSON.stringify(users));
         setTimeout(() => {
           window.location.href = '/';
         }, 1500);
@@ -78,41 +83,39 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-      });
+      // Check if username already exists
+      const { data: existingUser } = await supabase
+        .from('Users')
+        .select('Username')
+        .eq('Username', username)
+        .single();
 
-      if (authError) {
-        setErrorMessage(authError.message);
+      if (existingUser) {
+        setErrorMessage('Username already taken');
         setIsSubmitting(false);
         return;
       }
 
-      // Create user profile in Users table
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('Users')
-          .insert([
-            {
-              user_id: authData.user.id,
-              Name: name,
-              Username: username,
-              Password: password, // Note: In production, passwords should be hashed
-              Points: 0,
-              Level: 'Beginner',
-            }
-          ]);
+      // Insert new user into Users table
+      const { error: profileError } = await supabase
+        .from('Users')
+        .insert([
+          {
+            Name: name,
+            Username: username,
+            Password: password,
+            Points: 0,
+            Level: 'Beginner',
+          }
+        ]);
 
-        if (profileError) {
-          setErrorMessage('Account created but profile setup failed: ' + profileError.message);
-        } else {
-          setSuccessMessage('Account created successfully!');
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 1500);
-        }
+      if (profileError) {
+        setErrorMessage('Failed to create account: ' + profileError.message);
+      } else {
+        setSuccessMessage('Account created successfully!');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1500);
       }
     } catch (error) {
       setErrorMessage('An error occurred. Please try again.');
@@ -219,13 +222,13 @@ export default function LoginPage() {
               {/* Email */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email
+                  {isLogin ? 'Username or Email' : 'Email'}
                 </label>
                 <input
-                  type="email"
+                  type={isLogin ? "text" : "email"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={isLogin ? "Enter username or email" : "Enter your email"}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
