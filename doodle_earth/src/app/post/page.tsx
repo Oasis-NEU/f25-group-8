@@ -84,7 +84,7 @@ const PostPage = () => {
       <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       
       {/* Main Content */}
-      <div className="p-8">
+      <div className="pt-24 p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
