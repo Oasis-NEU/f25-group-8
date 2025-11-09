@@ -147,9 +147,9 @@ const ProfilePage = () => {
 
   const checkAuthentication = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const currentUser = localStorage.getItem('currentUser');
       
-      if (!user) {
+      if (!currentUser) {
         // User is not logged in, redirect to login page
         window.location.href = '/login';
       } else {
@@ -166,17 +166,19 @@ const ProfilePage = () => {
   const fetchUserCommissions = async () => {
     try {
       setLoadingCommissions(true);
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const currentUser = localStorage.getItem('currentUser');
       
-      if (!authUser) {
+      if (!currentUser) {
         console.log('No authenticated user');
         return;
       }
 
+      const userData = JSON.parse(currentUser);
+
       const { data, error } = await supabase
         .from('commissions')
         .select('*')
-        .eq('created_by', authUser.id);
+        .eq('created_by', userData.user_id);
 
       if (error) {
         console.error('Error fetching commissions:', error);
