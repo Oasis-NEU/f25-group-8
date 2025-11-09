@@ -4,74 +4,88 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import CommissionPin from './CommissionPin';
+import { supabase } from '@/lib/supabase/client';
 
-const mockCommissions = [
-  {
-    id: 'c1',
-    location: { lat: 37.7749, lng: -122.4194, name: 'San Francisco, CA' },
-    title: 'Golden Gate Sunset',
-    prompt: 'Add a dragon flying over the bridge',
-    category: 'background',
-    currency: 500,
-    timeRemaining: '12h',
-    submissionCount: 8
-  },
-  {
-    id: 'c2',
-    location: { lat: 42.3601, lng: -71.0589, name: 'Boston Common, MA' },
-    title: 'Historic Park Scene',
-    prompt: 'Add Revolutionary War soldiers marching through',
-    category: 'background',
-    currency: 650,
-    timeRemaining: '18h',
-    submissionCount: 12
-  },
-  {
-    id: 'c3',
-    location: { lat: 42.3736, lng: -71.1097, name: 'Harvard Square, MA' },
-    title: 'Academic Atmosphere',
-    prompt: 'Recreate in anime style',
-    category: 'recreate',
-    currency: 800,
-    timeRemaining: '5h',
-    submissionCount: 23
-  },
-  {
-    id: 'c4',
-    location: { lat: 42.3555, lng: -71.0603, name: 'Boston Harbor, MA' },
-    title: 'Waterfront Sunset',
-    prompt: 'Add sailing ships from the 1800s',
-    category: 'background',
-    currency: 550,
-    timeRemaining: '30h',
-    submissionCount: 7
-  },
-  {
-    id: 'c5',
-    location: { lat: 42.3467, lng: -71.0972, name: 'Fenway Park, MA' },
-    title: 'Game Day Energy',
-    prompt: 'Use only red and blue colors',
-    category: 'recreate',
-    currency: 900,
-    timeRemaining: '2h',
-    submissionCount: 34
-  },
-  {
-    id: 'c6',
-    location: { lat: 42.3519, lng: -71.0552, name: 'North End, MA' },
-    title: 'Little Italy Vibes',
-    prompt: 'Add gondolas in the streets (Venice style)',
-    category: 'background',
-    currency: 600,
-    timeRemaining: '15h',
-    submissionCount: 9
-  }
-];
+type Commission = {
+  id: number;
+  location: { lat: number; lng: number; name: string };
+  title: string;
+  prompt: string;
+  category: string;
+  currency: number;
+  timeRemaining: string;
+  submissionCount: number;
+  image_url: string;
+};
 
 const MapView = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [selectedCommission, setSelectedCommission] = useState<typeof mockCommissions[0] | null>(null);
+  const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch commissions from Supabase
+  useEffect(() => {
+    fetchCommissions();
+  }, []);
+
+  async function fetchCommissions() {
+    try {
+      const { data, error } = await supabase
+        .from('Post')
+        .select('*')
+        .order('time_posted', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform data to match Commission type
+      const formattedCommissions = data?.map((post: any) => {
+        // Parse location string to get lat/lng
+        // Assuming location is stored as "lat, lng" or just an address
+        const locationParts = post.location.split(',').map((s: string) => s.trim());
+        let lat = 42.3601; // Default to Boston
+        let lng = -71.0589;
+        
+        // Try to parse coordinates from location string
+        if (locationParts.length >= 2) {
+          const parsedLat = parseFloat(locationParts[0]);
+          const parsedLng = parseFloat(locationParts[1]);
+          if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+            lat = parsedLat;
+            lng = parsedLng;
+          }
+        }
+
+        // Calculate time remaining
+        const timeExpired = new Date(post.time_expired);
+        const now = new Date();
+        const hoursRemaining = Math.max(0, Math.floor((timeExpired.getTime() - now.getTime()) / (1000 * 60 * 60)));
+
+        return {
+          id: post.post_id,
+          location: {
+            lat: lat,
+            lng: lng,
+            name: post.location
+          },
+          title: `Commission #${post.post_id}`,
+          prompt: post.prompt,
+          category: 'background',
+          currency: 500, // You can add this to your Post table
+          timeRemaining: `${hoursRemaining}h`,
+          submissionCount: 0, // You'll need to count from Entry table
+          image_url: post.image_url
+        };
+      }) || [];
+
+      setCommissions(formattedCommissions);
+    } catch (error) {
+      console.error('Error fetching commissions:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -92,39 +106,8 @@ const MapView = () => {
 
     // Wait for map to load, then add markers
     map.current.on('load', () => {
-        console.log('Map loaded, adding markers...');
-        
-        mockCommissions.forEach((commission) => {
-        if (!map.current) return;
-
-        // Create marker element
-        const el = document.createElement('div');
-        el.className = 'commission-marker';
-        el.style.width = '30px';
-        el.style.height = '30px';
-        el.style.borderRadius = '50%';
-        el.style.backgroundColor = '#8B5CF6';
-        el.style.border = '3px solid white';
-        el.style.cursor = 'pointer';
-        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-
-        // Add marker to map
-        new mapboxgl.Marker(el)
-            .setLngLat([commission.location.lng, commission.location.lat])
-            .addTo(map.current!)
-            .getElement()
-            .addEventListener('click', () => {
-            setSelectedCommission(commission);
-            map.current?.flyTo({
-                center: [commission.location.lng, commission.location.lat],
-                zoom: 12,
-                duration: 1000
-            });
-            });
-        });
+      console.log('Map loaded');
     });
-
-    console.log('Map initialized'); // Debug log
 
     return () => {
       if (map.current) {
@@ -134,6 +117,53 @@ const MapView = () => {
     };
   }, []);
 
+  // Add markers when commissions are loaded
+  useEffect(() => {
+    if (!map.current || loading || commissions.length === 0) return;
+
+    console.log('Adding markers for', commissions.length, 'commissions');
+
+    commissions.forEach((commission) => {
+      if (!map.current) return;
+
+      // Create marker element
+      const el = document.createElement('div');
+      el.className = 'commission-marker';
+      el.style.width = '40px';
+      el.style.height = '40px';
+      el.style.borderRadius = '50%';
+      el.style.backgroundColor = '#8B5CF6';
+      el.style.border = '3px solid white';
+      el.style.cursor = 'pointer';
+      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      el.style.transition = 'all 0.3s ease';
+
+      // Add hover effect
+      el.addEventListener('mouseenter', () => {
+        el.style.transform = 'scale(1.2)';
+        el.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = 'scale(1)';
+        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      });
+
+      // Add marker to map
+      new mapboxgl.Marker(el)
+        .setLngLat([commission.location.lng, commission.location.lat])
+        .addTo(map.current!)
+        .getElement()
+        .addEventListener('click', () => {
+          setSelectedCommission(commission);
+          map.current?.flyTo({
+            center: [commission.location.lng, commission.location.lat],
+            zoom: 12,
+            duration: 1000
+          });
+        });
+    });
+  }, [commissions, loading]);
+
   return (
     <>
       <div 
@@ -141,6 +171,12 @@ const MapView = () => {
         className="absolute inset-0 z-0"
         style={{ width: '100%', height: '100%' }}
       />
+      
+      {loading && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white px-4 py-2 rounded-lg shadow-lg z-10">
+          <p className="text-gray-600">Loading commissions...</p>
+        </div>
+      )}
       
       {selectedCommission && (
         <CommissionPin
