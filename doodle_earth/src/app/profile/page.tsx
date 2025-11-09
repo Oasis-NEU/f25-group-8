@@ -128,7 +128,7 @@ const mockUserData = {
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const user = mockUserData;
+  const [user, setUser] = useState(mockUserData);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userCommissions, setUserCommissions] = useState([]);
   const [loadingCommissions, setLoadingCommissions] = useState(false);
@@ -141,9 +141,23 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      loadUserData();
       fetchUserCommissions();
     }
   }, [isAuthenticated]);
+
+  const loadUserData = () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      const userData = JSON.parse(currentUser);
+      // Update user state with actual data from localStorage
+      setUser({
+        ...mockUserData,
+        username: userData.Username,
+        id: userData.user_id,
+      });
+    }
+  };
 
   const checkAuthentication = async () => {
     try {
