@@ -4,12 +4,8 @@ import HamburgerMenu from '@/components/HamburgerMenu';
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
-import { useSearchParams } from 'next/navigation';
 
 const DrawingPage = () => {
-  const searchParams = useSearchParams();
-  const postId = searchParams.get('postId');
-  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedBrush, setSelectedBrush] = useState(0);
@@ -20,30 +16,6 @@ const DrawingPage = () => {
   const [unlockedBrushes, setUnlockedBrushes] = useState<number[]>([0, 1, 2, 3, 4, 5]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [commission, setCommission] = useState<any>(null);
-  
-  // Load commission details
-  useEffect(() => {
-    if (postId) {
-      fetchCommission();
-    }
-  }, [postId]);
-
-  async function fetchCommission() {
-    try {
-      const { data, error } = await supabase
-        .from('Post')
-        .select('*')
-        .eq('post_id', postId)
-        .single();
-
-      if (error) throw error;
-      setCommission(data);
-    } catch (error) {
-      console.error('Error fetching commission:', error);
-      alert('Failed to load commission details');
-    }
-  }
   
   // Brush definitions with fixed sizes
   const brushes = [
