@@ -8,7 +8,7 @@ import { X, MapPin, Clock, Users, DollarSign, Image } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type Commission = {
-  id: string;
+  id: string | number;
   location: {
     lat: number;
     lng: number;
@@ -20,6 +20,7 @@ type Commission = {
   currency: number;
   timeRemaining: string;
   submissionCount: number;
+  image_url?: string;
 };
 
 type CommissionPinProps = {
@@ -31,8 +32,13 @@ const CommissionPin = ({ commission, onClose }: CommissionPinProps) => {
   const router = useRouter();
 
   const handleViewDetails = () => {
-    // router.push(`/commission/${commission.id}`);
-    router.push(`/draw`);
+    // Extract numeric ID from string format (e.g., "c3" -> "3")
+    const numericId = typeof commission.id === 'string' 
+      ? commission.id.replace('c', '') 
+      : commission.id;
+    
+    // Navigate to drawing page with commission ID
+    router.push(`/draw?postId=${numericId}`);
   };
 
   return (
@@ -40,10 +46,20 @@ const CommissionPin = ({ commission, onClose }: CommissionPinProps) => {
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="relative">
-          {/* Placeholder for commission photo */}
-          <div className="h-48 bg-gradient-to-br from-purple-300 via-blue-300 to-pink-300 flex items-center justify-center">
-            <Image className="w-16 h-16 text-white/50" />
-          </div>
+          {/* Commission photo or placeholder */}
+          {commission.image_url ? (
+            <div className="h-48 bg-gray-200">
+              <img 
+                src={commission.image_url} 
+                alt={commission.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="h-48 bg-gradient-to-br from-purple-300 via-blue-300 to-pink-300 flex items-center justify-center">
+              <Image className="w-16 h-16 text-white/50" />
+            </div>
+          )}
           
           {/* Close button */}
           <button
