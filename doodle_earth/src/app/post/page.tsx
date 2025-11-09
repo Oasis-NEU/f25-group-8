@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image'
+import { createClient } from '@/utils/supabase/client';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapLocationPicker from '@/components/MapLocationPicker';
@@ -46,6 +47,12 @@ const PostPage = () => {
   // State for menu
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
+  // State for submission
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
+
+  const supabase = createClient();
+
   // Function to handle when user clicks a prompt
   function handlePromptSelect(prompt: string): void {
     setSelectedPrompt(prompt);
@@ -75,6 +82,74 @@ const PostPage = () => {
   // Trigger file input click
   function triggerFileInput(): void {
     fileInputRef.current?.click();
+  }
+
+  // Handle commission submission
+  async function handleSubmit(): Promise<void> {
+    // Validate inputs
+    if (!uploadedImage) {
+      alert('Please upload an image');
+      return;
+    }
+    if (!selectedLocation) {
+      alert('Please select a location');
+      return;
+    }
+    if (!selectedPrompt) {
+      alert('Please select a prompt');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        alert('You must be logged in to create a commission');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Calculate expiration time (e.g., 30 days from now)
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30);
+
+      // Insert into Supabase
+      const { data, error } = await supabase
+        .from('Post')
+        .insert([
+          {
+            image_url: uploadedImage,
+            location: selectedLocation,
+            prompt: selectedPrompt,
+            time_posted: new Date().toISOString(),
+            time_expired: expirationDate.toISOString(),
+            user_id: user.id,
+          }
+        ]);
+
+      if (error) {
+        console.error('Error creating commission:', error);
+        alert('Failed to create commission. Please try again.');
+      } else {
+        // Show success popup
+        setShowSuccessPopup(true);
+        
+        // Reset form after 2 seconds and redirect
+        setTimeout(() => {
+          setShowSuccessPopup(false);
+          // Redirect to map page
+          window.location.href = '/';
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -183,13 +258,29 @@ const PostPage = () => {
 
             {/* Submit Button */}
             <div className="pt-4 mt-4 border-t border-gray-200">
-              <button className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                Create Commission
+              <button 
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isSubmitting ? 'Creating...' : 'Create Commission'}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center animate-bounce">
+            <div className="text-6xl mb-4">✅</div>
+            <h2 className="text-2xl font-bold text-green-600 mb-2">Success!</h2>
+            <p className="text-gray-600">Your commission has been created successfully!</p>
+            <p className="text-sm text-gray-500 mt-2">Redirecting to map...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
