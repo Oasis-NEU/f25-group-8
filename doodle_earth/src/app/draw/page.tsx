@@ -2,13 +2,10 @@
 import TopBar from '@/components/TopBar';
 import HamburgerMenu from '@/components/HamburgerMenu';
 import React, { useRef, useState, useEffect } from 'react';
-import Image from 'next/image'
+import Image from 'next/image';
+import { supabase } from '@/lib/supabase/client';
 
-type TopBarProps = {
-  onMenuClick: () => void;
-};
-
-const SettingsPage = () => {
+const DrawingPage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedBrush, setSelectedBrush] = useState(0);
@@ -17,6 +14,8 @@ const SettingsPage = () => {
   const [historyStep, setHistoryStep] = useState(-1);
   const [unlockedColors, setUnlockedColors] = useState<string[]>(['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF']);
   const [unlockedBrushes, setUnlockedBrushes] = useState<number[]>([0, 1, 2, 3, 4, 5]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Brush definitions with fixed sizes
   const brushes = [
@@ -302,6 +301,55 @@ const SettingsPage = () => {
     link.click();
   };
 
+  // Submit drawing to Supabase
+  const submitDrawing = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Check if user is logged in
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+      alert('You must be logged in to submit a drawing');
+      window.location.href = '/login';
+      return;
+    }
+
+    const userData = JSON.parse(currentUser);
+
+    setIsSubmitting(true);
+
+    try {
+      // Convert canvas to base64 image
+      const imageDataUrl = canvas.toDataURL('image/png');
+
+      // Insert into Entry table
+      const { data, error } = await supabase
+        .from('Entry')
+        .insert([
+          {
+            image_url: imageDataUrl,
+            user_id: userData.user_id || null,
+            comp_winner: false,
+            // You might want to add post_id to link to a specific commission
+          }
+        ]);
+
+      if (error) {
+        console.error('Error submitting drawing:', error);
+        alert('Failed to submit drawing: ' + error.message);
+      } else {
+        alert('Drawing submitted successfully!');
+        // Optional: redirect to submissions page
+        // window.location.href = '/commission';
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while submitting');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const unlockBrush = (brushId: number) => {
     if (!unlockedBrushes.includes(brushId)) {
       setUnlockedBrushes([...unlockedBrushes, brushId]);
@@ -323,8 +371,6 @@ const SettingsPage = () => {
   const isColorUnlocked = (colorHex: string) => {
     return unlockedColors.includes(colorHex);
   };
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -334,7 +380,7 @@ const SettingsPage = () => {
       {/* Hamburger Menu */}
       <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto pt-20">
         <h1 className="text-3xl font-bold mb-4 text-center">Drawing Studio</h1>
 
         <div className="flex gap-4 justify-center">
@@ -380,7 +426,7 @@ const SettingsPage = () => {
 
           {/* Center - Canvas and Controls */}
           <div className="flex flex-col items-center">
-            {/* Top Controls */}
+            {/* Top Image */}
             <Image className="
             max-wd-md
             mx-auto
@@ -444,6 +490,15 @@ const SettingsPage = () => {
               />
               
             </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={submitDrawing}
+              disabled={isSubmitting}
+              className="mt-4 w-full max-w-2xl py-4 px-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isSubmitting ? '✨ Submitting...' : '🎨 Post Submission'}
+            </button>
  
           </div>
 
@@ -518,4 +573,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default DrawingPage;
