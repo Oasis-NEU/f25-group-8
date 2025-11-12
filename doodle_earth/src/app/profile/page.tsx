@@ -46,7 +46,7 @@ type SubmissionRowProps = {
 
 type CommissionRowProps = {
   commission: {
-    id: string;
+    post_id: string;
     title: string;
     location: string;
     prompt: string;
@@ -419,7 +419,7 @@ const CommissionsTab = ({ commissions, loading }) => (
       </div>
     ) : (
       commissions.map((commission) => (
-        <CommissionRow key={commission.id} commission={commission} />
+        <CommissionRow key={commission.post_id} commission={commission} />
       ))
     )}
   </div>
