@@ -190,9 +190,9 @@ const ProfilePage = () => {
       const userData = JSON.parse(currentUser);
 
       const { data, error } = await supabase
-        .from('commissions')
+        .from('Post')
         .select('*')
-        .eq('created_by', userData.user_id);
+        .eq('user_id', userData.user_id);
 
       if (error) {
         console.error('Error fetching commissions:', error);
