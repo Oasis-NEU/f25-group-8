@@ -17,7 +17,12 @@ const DrawingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [postData, setPostData] = useState<any>(null);
+  const [loadingPost, setLoadingPost] = useState(true);
   
+  // Hardcoded post_id
+  const postId = 3;
+
   // Brush definitions with fixed sizes
   const brushes = [
     { id: 0, name: 'Thin Pencil', type: 'pencil', size: 2, icon: '✏️', locked: false },
@@ -92,6 +97,33 @@ const DrawingPage = () => {
     { name: 'Charcoal', hex: '#36454F', locked: true },
     { name: 'Silver', hex: '#C0C0C0', locked: true },
   ];
+
+  // Fetch post data on mount
+  useEffect(() => {
+    fetchPostData();
+  }, []);
+
+  const fetchPostData = async () => {
+    try {
+      setLoadingPost(true);
+      const { data, error } = await supabase
+        .from('Post')
+        .select('*')
+        .eq('post_id', postId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching post:', error);
+      } else {
+        setPostData(data);
+        console.log('Fetched post data:', data);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoadingPost(false);
+    }
+  };
 
   // Initialize canvas
   useEffect(() => {
@@ -316,9 +348,6 @@ const DrawingPage = () => {
     }
 
     const userData = JSON.parse(currentUser);
-    
-    // Hardcoded post_id
-    const postId = 3;
 
     setIsSubmitting(true);
 
@@ -434,17 +463,27 @@ const DrawingPage = () => {
 
           {/* Center - Canvas and Controls */}
           <div className="flex flex-col items-center">
-            {/* Top Image */}
-            <Image 
-              className="max-wd-md mx-auto"
-              src="/placeholder_image.png"
-              width={500}
-              height={500}
-              alt="Contest Image"
-            />
+            {/* Top Image - Loading or Post Image */}
+            {loadingPost ? (
+              <div className="w-[500px] h-[500px] bg-gray-200 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500">Loading post...</p>
+              </div>
+            ) : postData?.image_url ? (
+              <img 
+                className="max-w-md mx-auto rounded-lg shadow-lg"
+                src={postData.image_url}
+                width={500}
+                height={500}
+                alt="Commission Image"
+              />
+            ) : (
+              <div className="w-[500px] h-[500px] bg-gray-200 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500">No image available</p>
+              </div>
+            )}
 
             <h1 className="text-xl font-bold my-4 text-center">
-              Prompt Here
+              {loadingPost ? 'Loading...' : postData?.prompt || 'No prompt available'}
             </h1>
 
             {/* Canvas */}
