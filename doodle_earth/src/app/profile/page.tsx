@@ -128,71 +128,29 @@ const mockUserData = {
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [user, setUser] = useState(mockUserData);
+  const user = mockUserData;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userCommissions, setUserCommissions] = useState([]);
   const [loadingCommissions, setLoadingCommissions] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    checkAuthentication();
+    fetchUserCommissions();
   }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadUserData();
-      fetchUserCommissions();
-    }
-  }, [isAuthenticated]);
-
-  const loadUserData = () => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      const userData = JSON.parse(currentUser);
-      // Update user state with actual data from localStorage
-      setUser({
-        ...mockUserData,
-        username: userData.Username,
-        id: userData.user_id,
-      });
-    }
-  };
-
-  const checkAuthentication = async () => {
-    try {
-      const currentUser = localStorage.getItem('currentUser');
-      
-      if (!currentUser) {
-        // User is not logged in, redirect to login page
-        window.location.href = '/login';
-      } else {
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      window.location.href = '/login';
-    } finally {
-      setCheckingAuth(false);
-    }
-  };
 
   const fetchUserCommissions = async () => {
     try {
       setLoadingCommissions(true);
-      const currentUser = localStorage.getItem('currentUser');
+      const { data: { user: authUser } } = await supabase.auth.getUser();
       
-      if (!currentUser) {
+      if (!authUser) {
         console.log('No authenticated user');
         return;
       }
 
-      const userData = JSON.parse(currentUser);
-
       const { data, error } = await supabase
         .from('commissions')
         .select('*')
-        .eq('created_by', userData.user_id);
+        .eq('created_by', authUser.id);
 
       if (error) {
         console.error('Error fetching commissions:', error);
@@ -206,23 +164,6 @@ const ProfilePage = () => {
       setLoadingCommissions(false);
     }
   };
-
-  // Show loading state while checking authentication
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render the page if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
