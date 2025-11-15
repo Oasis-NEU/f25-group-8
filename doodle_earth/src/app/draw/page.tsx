@@ -4,8 +4,13 @@ import HamburgerMenu from '@/components/HamburgerMenu';
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 const DrawingPage = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const postId = searchParams.get('postId'); // Get postId from URL
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedBrush, setSelectedBrush] = useState(0);
@@ -19,9 +24,6 @@ const DrawingPage = () => {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [postData, setPostData] = useState<any>(null);
   const [loadingPost, setLoadingPost] = useState(true);
-  
-  // Hardcoded post_id
-  const postId = 3;
 
   // Brush definitions with fixed sizes
   const brushes = [
@@ -100,10 +102,16 @@ const DrawingPage = () => {
 
   // Fetch post data on mount
   useEffect(() => {
-    fetchPostData();
-  }, []);
+    if (postId) {
+      fetchPostData();
+    } else {
+      setLoadingPost(false);
+    }
+  }, [postId]);
 
   const fetchPostData = async () => {
+    if (!postId) return;
+    
     try {
       setLoadingPost(true);
       const { data, error } = await supabase
@@ -339,15 +347,21 @@ const DrawingPage = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Check if user is logged in
-    const currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) {
-      alert('You must be logged in to submit a drawing');
-      window.location.href = '/login';
+    // Check if postId exists
+    if (!postId) {
+      alert('No commission selected. Please navigate from a commission.');
+      router.push('/commission');
       return;
     }
 
-    const userData = JSON.parse(currentUser);
+    // Check if user is logged in using Supabase auth
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      alert('You must be logged in to submit a drawing');
+      router.push('/login');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -355,14 +369,14 @@ const DrawingPage = () => {
       // Convert canvas to base64 image
       const imageDataUrl = canvas.toDataURL('image/png');
 
-      // Insert into Entry table
+      // Insert into Entry table with dynamic post_id
       const { data, error } = await supabase
         .from('Entry')
         .insert([
           {
             image_url: imageDataUrl,
-            user_id: userData.user_id || null,
-            post_id: postId,
+            user_id: user.id,
+            post_id: parseInt(postId), // Use dynamic postId from URL
             comp_winner: false,
           }
         ]);
@@ -376,7 +390,7 @@ const DrawingPage = () => {
         
         // Redirect to home after 2 seconds
         setTimeout(() => {
-          window.location.href = '/';
+          router.push('/');
         }, 2000);
       }
     } catch (error) {
@@ -408,6 +422,30 @@ const DrawingPage = () => {
   const isColorUnlocked = (colorHex: string) => {
     return unlockedColors.includes(colorHex);
   };
+
+  // Show error state if no postId
+  if (!postId) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <TopBar onMenuClick={() => setIsMenuOpen(true)} />
+        <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+        
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+            <div className="text-6xl mb-4">🎨</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Commission Selected</h2>
+            <p className="text-gray-600 mb-6">Please select a commission to start drawing.</p>
+            <button
+              onClick={() => router.push('/commission')}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition"
+            >
+              Browse Commissions
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -466,7 +504,7 @@ const DrawingPage = () => {
             {/* Top Image - Loading or Post Image */}
             {loadingPost ? (
               <div className="w-[500px] h-[500px] bg-gray-200 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">Loading post...</p>
+                <p className="text-gray-500">Loading commission...</p>
               </div>
             ) : postData?.image_url ? (
               <img 
