@@ -8,14 +8,14 @@ import { X, MapPin, Clock, Users, DollarSign, Palette } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-type Commission = {
-  post_id: number;
-  image_url: string | null;
-  location: string;
+// Type for MapView's formatted commission
+type FormattedCommission = {
+  id: number;
   prompt: string;
-  time_posted: string;
-  time_expired: string;
-  user_id: number;
+  imageUrl: string;
+  location: { lat: number; lng: number };
+  timePosted: string;
+  timeExpired: string;
   // Optional display fields
   category?: string;
   currency?: number;
@@ -24,7 +24,7 @@ type Commission = {
 };
 
 type CommissionPinProps = {
-  commission: Commission;
+  commission: FormattedCommission;
   onClose: () => void;
 };
 
@@ -33,18 +33,18 @@ const CommissionPin = ({ commission, onClose }: CommissionPinProps) => {
 
   const handleSubmitArt = () => {
     // Navigate to draw page with the post_id
-    router.push(`/draw?postId=${commission.post_id}`);
+    router.push(`/draw?postId=${commission.id}`);
   };
 
   const handleViewDetails = () => {
     // Navigate to commission details page
-    router.push(`/commission/${commission.post_id}`);
+    router.push(`/commission/${commission.id}`);
   };
 
   // Calculate time remaining
   const getTimeRemaining = () => {
     const now = new Date();
-    const expiry = new Date(commission.time_expired);
+    const expiry = new Date(commission.timeExpired);
     const diff = expiry.getTime() - now.getTime();
     
     if (diff <= 0) return 'Expired';
@@ -56,6 +56,13 @@ const CommissionPin = ({ commission, onClose }: CommissionPinProps) => {
     return `${hours}h`;
   };
 
+  // Format location for display
+  const getLocationName = () => {
+    // You can optionally use reverse geocoding here
+    // For now, just show coordinates
+    return `${commission.location.lat.toFixed(4)}, ${commission.location.lng.toFixed(4)}`;
+  };
+
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md z-20 px-4">
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
@@ -63,9 +70,9 @@ const CommissionPin = ({ commission, onClose }: CommissionPinProps) => {
         <div className="relative">
           {/* Commission Image */}
           <div className="relative h-48 bg-gradient-to-br from-purple-300 via-blue-300 to-pink-300 flex items-center justify-center">
-            {commission.image_url ? (
+            {commission.imageUrl ? (
               <Image 
-                src={commission.image_url}
+                src={commission.imageUrl}
                 alt="Commission"
                 fill
                 className="object-cover"
@@ -106,12 +113,12 @@ const CommissionPin = ({ commission, onClose }: CommissionPinProps) => {
           {/* Location */}
           <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
             <MapPin className="w-4 h-4" />
-            <span>{commission.location}</span>
+            <span>{getLocationName()}</span>
           </div>
 
           {/* Posted date */}
           <p className="text-xs text-gray-500 mb-4">
-            Posted {new Date(commission.time_posted).toLocaleDateString('en-US', { 
+            Posted {new Date(commission.timePosted).toLocaleDateString('en-US', { 
               month: 'short', 
               day: 'numeric' 
             })}
