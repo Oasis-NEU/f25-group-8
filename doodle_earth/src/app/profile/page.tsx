@@ -46,7 +46,7 @@ type SubmissionRowProps = {
 
 type CommissionRowProps = {
   commission: {
-    id: string;
+    post_id: string;
     title: string;
     location: string;
     prompt: string;
@@ -192,8 +192,12 @@ const ProfilePage = () => {
       const { data, error } = await supabase
         .from('Post')
         .select('*')
+<<<<<<< HEAD
         .eq('user_id', userData.user_id)
         .order('time_posted', { ascending: false });
+=======
+        .eq('user_id', userData.user_id);
+>>>>>>> 11a214a074b1a5564261ff2cf7b6ef5444628bc0
 
       if (error) {
         console.error('Error fetching commissions:', error);
