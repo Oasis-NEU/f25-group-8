@@ -46,7 +46,7 @@ type SubmissionRowProps = {
 
 type CommissionRowProps = {
   commission: {
-    id: string;
+    post_id: string;
     title: string;
     location: string;
     prompt: string;
@@ -190,9 +190,9 @@ const ProfilePage = () => {
       const userData = JSON.parse(currentUser);
 
       const { data, error } = await supabase
-        .from('commissions')
+        .from('Post')
         .select('*')
-        .eq('created_by', userData.user_id);
+        .eq('user_id', userData.user_id);
 
       if (error) {
         console.error('Error fetching commissions:', error);
@@ -419,7 +419,7 @@ const CommissionsTab = ({ commissions, loading }) => (
       </div>
     ) : (
       commissions.map((commission) => (
-        <CommissionRow key={commission.id} commission={commission} />
+        <CommissionRow key={commission.post_id} commission={commission} />
       ))
     )}
   </div>
