@@ -190,9 +190,10 @@ const ProfilePage = () => {
       const userData = JSON.parse(currentUser);
 
       const { data, error } = await supabase
-        .from('commissions')
+        .from('Post')
         .select('*')
-        .eq('created_by', userData.user_id);
+        .eq('user_id', userData.user_id)
+        .order('time_posted', { ascending: false });
 
       if (error) {
         console.error('Error fetching commissions:', error);
@@ -419,7 +420,7 @@ const CommissionsTab = ({ commissions, loading }) => (
       </div>
     ) : (
       commissions.map((commission) => (
-        <CommissionRow key={commission.id} commission={commission} />
+        <CommissionRow key={commission.post_id} commission={commission} />
       ))
     )}
   </div>
@@ -529,40 +530,88 @@ const SubmissionRow = ({ submission }: SubmissionRowProps) => (
   </div>
 );
 
-// Component: Commission Row
-const CommissionRow = ({ commission }: CommissionRowProps) => (
-  <div className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer">
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <h4 className="font-bold text-gray-900 mb-1">{commission.title}</h4>
-        <p className="text-sm text-gray-600 mb-2">{commission.prompt}</p>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            {commission.location}
+// Component: Commission Row (Updated for Post schema)
+const CommissionRow = ({ commission }: { commission: any }) => {
+  const [entryCount, setEntryCount] = React.useState(0);
+
+  React.useEffect(() => {
+    fetchEntryCount();
+  }, [commission.post_id]);
+
+  const fetchEntryCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('Entry')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', commission.post_id);
+
+      if (!error) {
+        setEntryCount(count || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching entry count:', err);
+    }
+  };
+
+  const isExpired = new Date(commission.time_expired) < new Date();
+  const status = isExpired ? 'Expired' : 'Active';
+  const statusColor = isExpired ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700';
+
+  return (
+    <div className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer border border-gray-200">
+      <div className="flex items-start justify-between gap-4">
+        {/* Left side - Commission info */}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-gray-900 mb-1 line-clamp-2">
+            {commission.prompt}
+          </h4>
+          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{commission.location}</span>
+            </div>
           </div>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-            {commission.category}
+
+          {/* Posted and Expiration dates */}
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <span>
+              Posted: {new Date(commission.time_posted).toLocaleDateString()}
+            </span>
+            <span>
+              Expires: {new Date(commission.time_expired).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+
+        {/* Right side - Stats */}
+        <div className="flex-shrink-0 text-right">
+          {/* Submission count */}
+          <div className="mb-3">
+            <p className="text-xs text-gray-500 mb-1">Submissions</p>
+            <p className="text-lg font-bold text-blue-600">{entryCount}</p>
+          </div>
+
+          {/* Status badge */}
+          <span
+            className={`inline-block text-xs px-3 py-1 rounded-full font-medium ${statusColor}`}
+          >
+            {status}
           </span>
         </div>
       </div>
-      <div className="text-right flex-shrink-0 ml-4">
-        <p className="font-bold text-green-600 mb-1">${commission.currency}</p>
-        {commission.submissionCount && (
-          <p className="text-xs text-gray-500 mb-2">{commission.submissionCount} submissions</p>
-        )}
-        {commission.status && (
-          <span className={`text-xs px-2 py-1 rounded ${
-            commission.status === 'active' 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-gray-100 text-gray-700'
-          }`}>
-            {commission.status}
-          </span>
-        )}
-      </div>
+
+      {/* Preview thumbnail if available */}
+      {commission.image_url && (
+        <div className="mt-4 w-full h-32 rounded-lg overflow-hidden bg-gray-200">
+          <img
+            src={commission.image_url}
+            alt={commission.prompt}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 export default ProfilePage;
