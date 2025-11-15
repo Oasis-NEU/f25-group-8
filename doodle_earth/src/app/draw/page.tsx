@@ -354,14 +354,16 @@ const DrawingPage = () => {
       return;
     }
 
-    // Check if user is logged in using Supabase auth
-    const { data: { user } } = await supabase.auth.getUser();
+    // Check if user is logged in using localStorage
+    const currentUser = localStorage.getItem('currentUser');
     
-    if (!user) {
+    if (!currentUser) {
       alert('You must be logged in to submit a drawing');
       router.push('/login');
       return;
     }
+
+    const userData = JSON.parse(currentUser);
 
     setIsSubmitting(true);
 
@@ -375,7 +377,7 @@ const DrawingPage = () => {
         .insert([
           {
             image_url: imageDataUrl,
-            user_id: user.id,
+            user_id: userData.user_id,
             post_id: parseInt(postId), // Use dynamic postId from URL
             comp_winner: false,
           }
